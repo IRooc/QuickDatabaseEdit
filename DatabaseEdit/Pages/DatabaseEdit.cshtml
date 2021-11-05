@@ -1,0 +1,160 @@
+﻿@page
+@model DatabaseEdit.Pages.DatabaseEditModel
+@using System.Data;
+@{
+}
+
+<div>
+    @switch (Model.View)
+    {
+        case "row":
+            {
+                <div>
+                    <h2>Table @Model.Table row @Model.Row</h2>
+                    <a href="?view=table&table=@Model.Table">back</a>
+                    @if (!string.IsNullOrEmpty(Model.Message))
+                    {
+                        <div class="message">
+                            <button>x</button>
+                            @Html.Raw(Model.Message)
+                        </div>
+                    }
+                    <form method="post">
+                        <table class="table">
+
+                            @{
+                                var row = Model.TableConfig.Data.Rows[Model.Row];
+                            }
+                            @for (int r = 0; r < Model.TableConfig.Config.Count(); r++)
+                            {
+                                var e = Model.TableConfig.Config.ElementAt(r);
+                                <tr>
+                                    <td>@e[3]</td>
+                                    <td>
+                                        @if (Model.TableConfig.ForeignKeys.ContainsKey(r) && !string.IsNullOrEmpty(row.ItemArray[r].ToString()))
+                                        {
+                                            var table = Model.TableConfig.ForeignKeys[r];
+                                            <select name="@e[3]">
+                                                @foreach (DataRow val in table.Rows)
+                                                {
+                                                    <option value="@(val["key"])" selected="@(val["key"].ToString() == row.ItemArray[r].ToString() )">@(val["value"]) (@val["key"])</option>
+                                                }
+                                            </select>
+
+                                        }
+                                        else if (e[6].ToString().Contains("varchar") && int.TryParse(e[7].ToString(), out int fieldlength) && fieldlength == -1)
+                                        {
+                                            <textarea name="@e[3]">@row.ItemArray[r]</textarea>
+                                        }
+                                        else if (e[6].ToString() == "bit")
+                                        {
+                                            <label> true <input type="radio" name="@e[3]" value="True" checked="@(row.ItemArray[r].ToString() == "True")" /></label>
+                                            <label> false <input type="radio" name="@e[3]" value="False" checked="@(row.ItemArray[r].ToString() =="False")" /></label>
+                                        }
+                                        else if (e[6].ToString() == "int")
+                                        {
+                                            <input type="number" name="@e[3]" value="@row.ItemArray[r]" />
+                                        }
+                                        else
+                                        {
+                                            <input type="text" name="@e[3]" value="@row.ItemArray[r]" />
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </table>
+                        <button type="submit">Save</button>
+                    </form>
+
+                </div>
+            }
+            break;
+        case "config":
+            {
+                <div>
+                    <h2>Table @Model.Table</h2>
+                    <a href="?">back</a>
+                    <table>
+                        @foreach (DataRow row in Model.TableConfig.Config)
+                        {
+                            <tr>
+                                @foreach (var item in row.ItemArray)
+                                {
+                                    <td>@item</td>
+                                }
+                            </tr>
+                        }
+                    </table>
+                </div>
+            }
+            break;
+        case "table":
+            {
+                <div>
+                    <h2>Table @Model.Table</h2>
+                    <label>search<input id="search" type="text" oninput="searchTable(event)" /></label>
+                    <a href="?">back</a><div class="table-responsive">
+                        <table class="table table-hover" id="tablerows">
+
+                            <thead>
+                                <tr>
+                                    @foreach (DataColumn col in Model.TableConfig.Data.Columns)
+                                    {
+                                        <th class="sort">@col.ColumnName</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int r = 0; r < Model.TableConfig.Data.Rows.Count; r++)
+                                {
+                                    var row = Model.TableConfig.Data.Rows[r];
+                                <tr class="clickable" onclick="document.location = '?view=row&table=@(Model.Table)&row=@(r)'">
+                                    @for (int i = 0; i < row.ItemArray.Length; i++)
+                                    {
+                                        var item = row.ItemArray[i];
+                                        var config = Model.TableConfig.Config.ElementAt(i);
+                                        if (Model.TableConfig.ForeignKeys.ContainsKey(i) && !string.IsNullOrEmpty(item.ToString()))
+                                        {
+                                            var table = Model.TableConfig.ForeignKeys[i];
+                                            <td>
+                                                @(table.Rows.Cast<DataRow>().First(r => r["key"].ToString() == item.ToString())["value"])
+                                            </td>
+                                        }
+                                        else if (config.ItemArray[6].ToString() == "datetime" && item != DBNull.Value)
+                                        {
+                                            <td>@(((DateTime?)item)?.ToString("yyyy-MM-ddTHH:mm:ss"))</td>
+                                        }
+                                        else
+                                        {
+                                            <td>@item</td>
+                                        }
+                                    }
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+            break;
+        case "tables":
+            {
+                <div>
+                    <h2>Tables</h2>
+                    <ul>
+                        @foreach (var table in Model.Config.GetTables())
+                        {
+                            <li><a href="?view=table&table=@table">@table</a>   | <a href="?view=config&table=@table">config</a></li>
+                        }
+                    </ul>
+                </div>
+            }
+            break;
+        default:
+            {
+                <div>Loading...</div>
+            }
+            break;
+    }
+
+</div>

@@ -8,9 +8,7 @@ namespace DatabaseEdit
 {
     public class DatabaseConfig
     {
-
-
-        public System.Data.DataTable ConfigTable { get; set; }
+        public DataTable ConfigTable { get; set; }
 
         const string query = @"select a.TABLE_SCHEMA, a.TABLE_NAME, a.ORDINAL_POSITION, a.COLUMN_NAME, a.COLUMN_DEFAULT, a.IS_NULLABLE, a.DATA_TYPE, a.CHARACTER_MAXIMUM_LENGTH, b.CONSTRAINT_NAME, c.CONSTRAINT_TYPE, d.PK_TableSchema, d.PK_Table, d.PK_Column, ISNULL(d.PK_Show, d.PK_Column) as PK_Show, COLUMNPROPERTY(OBJECT_ID(a.TABLE_SCHEMA+'.'+a.TABLE_NAME),a.COLUMN_NAME,'IsComputed') IS_COMPUTED,COLUMNPROPERTY(OBJECT_ID(a.TABLE_SCHEMA+'.'+a.TABLE_NAME),a.COLUMN_NAME,'IsIdentity') IS_IDENTITY
 from INFORMATION_SCHEMA.COLUMNS a
@@ -27,14 +25,14 @@ where a.TABLE_CATALOG = DB_NAME()";
 
         public DatabaseConfig(IConfiguration configuration)
         {
-            using (var connection = new Microsoft.Data.SqlClient.SqlConnection(configuration.GetConnectionString("Database")))
+            using (var connection = new SqlConnection(configuration.GetConnectionString("Database")))
             {
-                using (var command = new Microsoft.Data.SqlClient.SqlCommand(query, connection))
+                using (var command = new SqlCommand(query, connection))
                 {
                     connection.Open();
                     using (var reader = command.ExecuteReader())
                     {
-                        ConfigTable = new System.Data.DataTable();
+                        ConfigTable = new DataTable();
                         ConfigTable.Load(reader);
                     }
                     connection.Close();
@@ -59,7 +57,7 @@ where a.TABLE_CATALOG = DB_NAME()";
                 result.ConnectionString = configuration.GetConnectionString("Database");
                 result.Table = table;
                 result.LoadData();
-                result.LoadTableConfiguration();
+                result.LoadConfiguration();
                 return result;
             }
             return null;
@@ -80,7 +78,7 @@ where a.TABLE_CATALOG = DB_NAME()";
             using (var connection = new SqlConnection(ConnectionString))
             {
                 var query = "SELECT * FROM " + Table;
-                using (var command = new Microsoft.Data.SqlClient.SqlCommand(query, connection))
+                using (var command = new SqlCommand(query, connection))
                 {
                     connection.Open();
                     using (var reader = command.ExecuteReader())
@@ -93,7 +91,7 @@ where a.TABLE_CATALOG = DB_NAME()";
             }
         }
 
-        public void LoadTableConfiguration()
+        public void LoadConfiguration()
         {
             if (string.IsNullOrEmpty(Table)) return;
 
@@ -127,6 +125,11 @@ where a.TABLE_CATALOG = DB_NAME()";
 
         public bool UpdateRow(int row, Dictionary<string, string> updated)
         {
+            if (!PrimaryKeys.Any())
+            {
+                //can't update database because there is no primary key
+                return false;
+            }
             var current = Data.Rows[row];
 
             var where = string.Empty;
@@ -149,7 +152,7 @@ where a.TABLE_CATALOG = DB_NAME()";
             }
 
             var query = $"UPDATE {Table} SET {set} WHERE {where}";
-            using (var connection = new Microsoft.Data.SqlClient.SqlConnection(ConnectionString))
+            using (var connection = new SqlConnection(ConnectionString))
             {
                 using (var command = new SqlCommand(query, connection))
                 {
@@ -169,8 +172,6 @@ where a.TABLE_CATALOG = DB_NAME()";
                     return result > 0;
                 }
             }
-
-            return false;
         }
 
     }

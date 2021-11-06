@@ -36,10 +36,9 @@ var sorters = document.querySelectorAll('th.sort');
 for (let i = 0; i < sorters.length; i++) {
     var sort = sorters[i];
     sort.addEventListener('click', (e) => {
-        console.log('clicked', e, e.target.cellIndex, e.target.parentElement.parentElement.parentElement);
         document.body.style.cursor = "wait";
         setTimeout(() => {
-            sortTable(e.target.parentElement.parentElement.parentElement, e.target.cellIndex);
+            sortTable(e.target.parentElement.parentElement.parentElement, e.target.cellIndex, e.target.dataset.type);
             document.body.style.cursor = "default";
         }, 100)
     })
@@ -52,15 +51,14 @@ if (msgButton) {
 
 async function newguid(event) {
     const response = await fetch('?handler=Guid');
-    console.log(response);
-    event.target.parentElement.querySelector('input').value = await (await response.text()).substring(1,37);
+    event.target.parentElement.querySelector('input').value = (await response.text()).substring(1,37);
 }
 
 
 /*FROM w3cschools*/
-/*FROM w3cschools*/
-/*FROM w3cschools*/
-function sortTable(table, n) {
+/*FROM w3cschools https://www.w3schools.com/howto/howto_js_sort_table.asp*/
+/*FROM w3cschools with data-type tweaks*/
+function sortTable(table, n, datatype) {
     var rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
     switching = true;
     // Set the sorting direction to ascending:
@@ -80,16 +78,26 @@ function sortTable(table, n) {
             one from current row and one from the next: */
             x = rows[i].getElementsByTagName("TD")[n];
             y = rows[i + 1].getElementsByTagName("TD")[n];
+
+            if (datatype == 'int32') {
+                x = parseInt(x.innerHTML.toLowerCase());
+                y = parseInt(y.innerHTML.toLowerCase());
+
+            } else {
+                x = x.innerHTML.toLowerCase();
+                y = y.innerHTML.toLowerCase();
+            }
+
             /* Check if the two rows should switch place,
             based on the direction, asc or desc: */
             if (dir == "asc") {
-                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                if (x > y) {
                     // If so, mark as a switch and break the loop:
                     shouldSwitch = true;
                     break;
                 }
             } else if (dir == "desc") {
-                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                if (x < y) {
                     // If so, mark as a switch and break the loop:
                     shouldSwitch = true;
                     break;

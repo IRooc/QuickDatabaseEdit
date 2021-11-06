@@ -15,6 +15,11 @@ table {
     border-collapse: collapse;
 }
 
+    table.edit {
+        width: 100%;
+        max-width: 800px;
+    }
+
     table tr {
         border-bottom: 1px solid black;
     }

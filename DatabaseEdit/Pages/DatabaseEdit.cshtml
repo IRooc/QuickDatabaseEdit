@@ -20,7 +20,7 @@
                         </div>
                     }
                     <form method="post">
-                        <table class="table">
+                        <table class="edit">
 
                             @{
                                 var row = Model.Row == -1 ? Model.TableConfig.Data.NewRow() : Model.TableConfig.Data.Rows[Model.Row];
@@ -30,47 +30,54 @@
                                 var e = Model.TableConfig.Config.ElementAt(r);
                                 <tr>
                                     <td>@e[3]</td>
-                                    <td>
-                                        @if (Model.TableConfig.ForeignKeys.ContainsKey(r))
-                                        {
-                                            var table = Model.TableConfig.ForeignKeys[r];
-                                            <select name="@e[3]">
-                                                <option value=""></option>
-                                                @foreach (DataRow val in table.Rows)
+                                    @if (e[9].ToString() == "PRIMARY KEY" && Model.Row >= 0)
+                                    {
+                                        <td>@row.ItemArray[r]</td>
+                                    }
+                                    else
+                                    {
+                                        <td>
+                                            @if (Model.TableConfig.ForeignKeys.ContainsKey(r))
+                                            {
+                                                var table = Model.TableConfig.ForeignKeys[r];
+                                                <select name="@e[3]">
+                                                    <option value=""></option>
+                                                    @foreach (DataRow val in table.Rows)
+                                                    {
+                                                        <option value="@(val["key"])" selected="@(val["key"].ToString() == row.ItemArray[r].ToString() )">@(val["value"]) (@val["key"])</option>
+                                                    }
+                                                </select>
+
+                                            }
+                                            else if (e[6].ToString().Contains("varchar") && int.TryParse(e[7].ToString(), out int fieldlength) && fieldlength == -1)
+                                            {
+                                                <textarea name="@e[3]">@row.ItemArray[r]</textarea>
+                                            }
+                                            else if (e[6].ToString() == "bit")
+                                            {
+                                                <label> true <input type="radio" name="@e[3]" value="True" checked="@(row.ItemArray[r].ToString() == "True")" /></label>
+                                                <label> false <input type="radio" name="@e[3]" value="False" checked="@(row.ItemArray[r].ToString() == "False")" /></label>
+                                            }
+                                            else if (e[6].ToString() == "uniqueidentifier")
+                                            {
+                                                <input class="guid" type="text" name="@e[3]" value="@row.ItemArray[r]" /> <button type="button" onclick="newguid(event)">new guid</button>
+                                            }
+                                            @*doesnt really work yet....
+
+                                                else if (e[6].ToString() == "datetime")
                                                 {
-                                                    <option value="@(val["key"])" selected="@(val["key"].ToString() == row.ItemArray[r].ToString() )">@(val["value"]) (@val["key"])</option>
-                                                }
-                                            </select>
-
-                                        }
-                                        else if (e[6].ToString().Contains("varchar") && int.TryParse(e[7].ToString(), out int fieldlength) && fieldlength == -1)
-                                        {
-                                            <textarea name="@e[3]">@row.ItemArray[r]</textarea>
-                                        }
-                                        else if (e[6].ToString() == "bit")
-                                        {
-                                            <label> true <input type="radio" name="@e[3]" value="True" checked="@(row.ItemArray[r].ToString() == "True")" /></label>
-                                            <label> false <input type="radio" name="@e[3]" value="False" checked="@(row.ItemArray[r].ToString() =="False")" /></label>
-                                        }
-                                        else if (e[6].ToString() == "uniqueidentifier")
-                                        {
-                                            <input class="guid" type="text" name="@e[3]" value="@row.ItemArray[r]" /> <button type="button" onclick="newguid(event)">new guid</button>
-                                        }
-                                        @*doesnt really work yet....
-
-                                        else if (e[6].ToString() == "datetime")
-                                        {
-                                            <input type="datetime-local" name="@e[3]" value="@row.ItemArray[r]" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}" />
-                                        }*@
-                                        else if (e[6].ToString() == "int")
-                                        {
-                                            <input type="number" name="@e[3]" value="@row.ItemArray[r]" />
-                                        }
-                                        else
-                                        {
-                                            <input type="text" name="@e[3]" value="@row.ItemArray[r]" />
-                                        }
-                                    </td>
+                                                    <input type="datetime-local" name="@e[3]" value="@row.ItemArray[r]" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}" />
+                                                }*@
+                                            else if (e[6].ToString() == "int")
+                                            {
+                                                <input type="number" name="@e[3]" value="@row.ItemArray[r]" />
+                                            }
+                                            else
+                                            {
+                                                <input type="text" name="@e[3]" value="@row.ItemArray[r]" />
+                                            }
+                                        </td>
+                                    }
                                 </tr>
                             }
                         </table>
@@ -119,7 +126,7 @@
                             <tr>
                                 @foreach (DataColumn col in Model.TableConfig.Data.Columns)
                                 {
-                                    <th class="sort">@col.ColumnName</th>
+                                    <th class="sort" data-type="@col.DataType.Name.ToLower()">@col.ColumnName</th>
                                 }
                             </tr>
                         </thead>

@@ -1,5 +1,6 @@
 ﻿function searchTable(event) {
     var search = event.target.value.toLowerCase();
+    localStorage.setItem('search', search);
     var el = document.getElementById('tablerows');
     var rows = el.querySelectorAll('tr.clickable');
     if (search == '') {
@@ -20,6 +21,16 @@
         }
     }
 }
+var curSearch = localStorage.getItem('search');
+var search = document.getElementById('search');
+if (curSearch && search) {
+    search.value = curSearch;
+    var event = new Event('input', {
+        bubbles: true,
+        cancelable: true,
+    });
+    search.dispatchEvent(event);
+}
 
 var sorters = document.querySelectorAll('th.sort');
 for (let i = 0; i < sorters.length; i++) {
@@ -30,7 +41,7 @@ for (let i = 0; i < sorters.length; i++) {
         setTimeout(() => {
             sortTable(e.target.parentElement.parentElement.parentElement, e.target.cellIndex);
             document.body.style.cursor = "default";
-        },100)
+        }, 100)
     })
 }
 
@@ -39,6 +50,15 @@ if (msgButton) {
     msgButton.addEventListener("click", (e) => { e.target.parentElement.remove(); });
 }
 
+async function newguid(event) {
+    const response = await fetch('?handler=Guid');
+    console.log(response);
+    event.target.parentElement.querySelector('input').value = await (await response.text()).substring(1,37);
+}
+
+
+/*FROM w3cschools*/
+/*FROM w3cschools*/
 /*FROM w3cschools*/
 function sortTable(table, n) {
     var rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;

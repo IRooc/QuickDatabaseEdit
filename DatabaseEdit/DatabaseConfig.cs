@@ -130,6 +130,39 @@ where a.TABLE_CATALOG = DB_NAME()";
                 //can't update database because there is no primary key
                 return false;
             }
+            if (row == -1)
+            {
+                return Add(updated);
+            }
+            return Update(row, updated);
+        }
+
+        private bool Add(Dictionary<string, string> updated)
+        {
+            var columns = string.Join(',', updated.Select(k => k.Key).ToArray());
+            var values = string.Join(',', updated.Select(k => "@value" + k.Key).ToArray());
+
+            var query = $"INSERT INTO {Table} ({columns}) VALUES({values})";
+            using (var connection = new SqlConnection(ConnectionString))
+            {
+                using (var command = new SqlCommand(query, connection))
+                {
+                    foreach (var update in updated)
+                    {
+                        command.Parameters.AddWithValue("value" + update.Key, update.Value);
+                    }
+                    connection.Open();
+                    var result = command.ExecuteNonQuery();
+                    connection.Close();
+
+                    LoadData();
+                    return result > 0;
+                }
+            }
+        }
+
+        private bool Update(int row, Dictionary<string, string> updated)
+        {
             var current = Data.Rows[row];
 
             var where = string.Empty;
@@ -173,6 +206,5 @@ where a.TABLE_CATALOG = DB_NAME()";
                 }
             }
         }
-
     }
 }

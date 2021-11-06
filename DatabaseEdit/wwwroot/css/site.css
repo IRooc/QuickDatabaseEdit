@@ -29,6 +29,10 @@ table {
         width: 100%
     }
 
+        table input.guid {
+            width: 80%
+        }
+
 tr.clickable {
     cursor: pointer;
 }

@@ -23,7 +23,7 @@
                         <table class="table">
 
                             @{
-                                var row = Model.TableConfig.Data.Rows[Model.Row];
+                                var row = Model.Row == -1 ? Model.TableConfig.Data.NewRow() : Model.TableConfig.Data.Rows[Model.Row];
                             }
                             @for (int r = 0; r < Model.TableConfig.Config.Count(); r++)
                             {
@@ -31,10 +31,11 @@
                                 <tr>
                                     <td>@e[3]</td>
                                     <td>
-                                        @if (Model.TableConfig.ForeignKeys.ContainsKey(r) && !string.IsNullOrEmpty(row.ItemArray[r].ToString()))
+                                        @if (Model.TableConfig.ForeignKeys.ContainsKey(r))
                                         {
                                             var table = Model.TableConfig.ForeignKeys[r];
                                             <select name="@e[3]">
+                                                <option value=""></option>
                                                 @foreach (DataRow val in table.Rows)
                                                 {
                                                     <option value="@(val["key"])" selected="@(val["key"].ToString() == row.ItemArray[r].ToString() )">@(val["value"]) (@val["key"])</option>
@@ -50,6 +51,14 @@
                                         {
                                             <label> true <input type="radio" name="@e[3]" value="True" checked="@(row.ItemArray[r].ToString() == "True")" /></label>
                                             <label> false <input type="radio" name="@e[3]" value="False" checked="@(row.ItemArray[r].ToString() =="False")" /></label>
+                                        }
+                                        else if (e[6].ToString() == "uniqueidentifier")
+                                        {
+                                            <input class="guid" type="text" name="@e[3]" value="@row.ItemArray[r]" /> <button type="button" onclick="newguid(event)">new guid</button>
+                                        }
+                                        else if (e[6].ToString() == "datetime")
+                                        {
+                                            <input type="datetime" name="@e[3]" value="@row.ItemArray[r]" />
                                         }
                                         else if (e[6].ToString() == "int")
                                         {
@@ -75,6 +84,12 @@
                     <h2>Table @Model.Table</h2>
                     <a href="?">back</a>
                     <table>
+                        <tr>
+                            @for (int i = 0; i < Model.TableConfig.Config.ElementAt(0).ItemArray.Length; i++)
+                            {
+                                <td>@i</td>
+                            }
+                        </tr>
                         @foreach (DataRow row in Model.TableConfig.Config)
                         {
                             <tr>
@@ -93,21 +108,23 @@
                 <div>
                     <h2>Table @Model.Table</h2>
                     <label>search<input id="search" type="text" oninput="searchTable(event)" /></label>
-                    <a href="?">back</a><div class="table-responsive">
-                        <table class="table table-hover" id="tablerows">
+                    <a href="?">back</a>
+                    <a href="?view=row&table=@(Model.Table)&row=-1">new</a>
 
-                            <thead>
-                                <tr>
-                                    @foreach (DataColumn col in Model.TableConfig.Data.Columns)
-                                    {
-                                        <th class="sort">@col.ColumnName</th>
-                                    }
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @for (int r = 0; r < Model.TableConfig.Data.Rows.Count; r++)
+                    <table id="tablerows">
+
+                        <thead>
+                            <tr>
+                                @foreach (DataColumn col in Model.TableConfig.Data.Columns)
                                 {
-                                    var row = Model.TableConfig.Data.Rows[r];
+                                    <th class="sort">@col.ColumnName</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int r = 0; r < Model.TableConfig.Data.Rows.Count; r++)
+                            {
+                                var row = Model.TableConfig.Data.Rows[r];
                                 <tr class="clickable" onclick="document.location = '?view=row&table=@(Model.Table)&row=@(r)'">
                                     @for (int i = 0; i < row.ItemArray.Length; i++)
                                     {
@@ -130,11 +147,11 @@
                                         }
                                     }
                                 </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                            }
+                        </tbody>
+                    </table>
                 </div>
+
             }
             break;
         case "tables":

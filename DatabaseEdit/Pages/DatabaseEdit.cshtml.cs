@@ -39,12 +39,16 @@ namespace DatabaseEdit.Pages
             Init();
         }
 
+        public JsonResult OnGetGuid()
+        {
+            return new JsonResult(Guid.NewGuid());
+        }
+
         public void OnPost()
         {
             Init();
 
-            this.Message = "Saved<br/>";
-            var row = TableConfig.Data.Rows[Row];
+            var row = Row == -1 ? TableConfig.Data.NewRow() : TableConfig.Data.Rows[Row];
             var updated = new Dictionary<string, string>();
             foreach (var config in TableConfig.Config)
             {
@@ -62,14 +66,17 @@ namespace DatabaseEdit.Pages
             }
             else
             {
+                this.Message = "Saved<br/>";
                 bool success = TableConfig.UpdateRow(Row, updated);
-                if (!success) this.Message += "UPDATE FAILED!!!!!!!!!!!!!!!!!!";
+                if (!success) this.Message += "UPDATE FAILED!!!!!!!!!!!!!!!!!!"; //https://wiki.lspace.org/mediawiki/index.php/Multiple_exclamation_marks
                 this.Message += string.Join("<br/>", updated.Select(k => { return k.Key + ": " + k.Value; }).ToArray());
             }
         }
 
         private void Init()
         {
+            ViewData["Title"] = Table ?? "Tables";
+
             if (!string.IsNullOrEmpty(Table))
             {
                 TableConfig = Config.GetTable(Table);
@@ -78,8 +85,6 @@ namespace DatabaseEdit.Pages
                     View = "tables";
                 }
             }
-
-            ViewData["Title"] = Table ?? "Tables";
         }
     }
 }

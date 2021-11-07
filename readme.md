@@ -1,4 +1,4 @@
-# Quick editor for a database
+# Quick editor for a SQL Server database
 
 Only works on smaller databases because foreign keys will be loaded in dropdowns
 

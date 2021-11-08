@@ -32,7 +32,10 @@
                                     <td>@e[3]</td>
                                     @if (e[9].ToString() == "PRIMARY KEY" && Model.Row >= 0)
                                     {
-                                        <td>@row.ItemArray[r]</td>
+                                        <td>
+                                            <input type="hidden" name="@e[3]" value="@row.ItemArray[r]" />
+                                            @row.ItemArray[r]
+                                        </td>
                                     }
                                     else
                                     {

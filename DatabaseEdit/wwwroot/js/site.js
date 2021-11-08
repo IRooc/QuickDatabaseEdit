@@ -1,6 +1,7 @@
-﻿function searchTable(event) {
+﻿var currentQuerystring = document.location.search;
+function searchTable(event) {
     var search = event.target.value.toLowerCase();
-    localStorage.setItem('search', search);
+    localStorage.setItem('search' + currentQuerystring, search);
     var el = document.getElementById('tablerows');
     var rows = el.querySelectorAll('tr.clickable');
     console.log('search', search);
@@ -23,7 +24,7 @@
         }
     }
 }
-var curSearch = localStorage.getItem('search');
+var curSearch = localStorage.getItem('search' + currentQuerystring);
 var search = document.getElementById('search');
 if (curSearch && search) {
     search.value = curSearch;

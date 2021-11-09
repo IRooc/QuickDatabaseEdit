@@ -4,7 +4,7 @@ function searchTable(event) {
     localStorage.setItem('search' + currentQuerystring, search);
     var el = document.getElementById('tablerows');
     var rows = el.querySelectorAll('tr.clickable');
-    console.log('search', search);
+    //console.log('search', search);
     if (search == '') {
         var hidden = el.querySelectorAll('tr.clickable.hide')
         for (let i = 0; i < hidden.length; i++) {

@@ -10,8 +10,8 @@
         case "row":
             {
                 <div>
-                    <h2>Table @Model.Table row @Model.Row</h2>
-                    <a href="?view=table&table=@Model.Table">back</a>
+                    <h2>Table @Model.Table row @Model.Row <a href="?view=table&table=@Model.Table">back</a></h2>
+                    
                     @if (!string.IsNullOrEmpty(Model.Message))
                     {
                         <div class="message">
@@ -93,8 +93,8 @@
         case "config":
             {
                 <div>
-                    <h2>Table @Model.Table</h2>
-                    <a href="?">back</a>
+                    <h2>Table @Model.Table <a href="?">back</a></h2>
+                    
                     <table>
                         <tr>
                             @for (int i = 0; i < Model.TableConfig.Config.ElementAt(0).ItemArray.Length; i++)
@@ -118,9 +118,9 @@
         case "table":
             {
                 <div>
-                    <h2>Table @Model.Table</h2>
+                    <h2>Table @Model.Table <a href="?">back</a></h2>
+                    
                     <label>search<input id="search" type="text" oninput="searchTable(event)" /></label>
-                    <a href="?">back</a>
                     <a href="?view=row&table=@(Model.Table)&row=-1">new</a>
 
                     <table id="tablerows">

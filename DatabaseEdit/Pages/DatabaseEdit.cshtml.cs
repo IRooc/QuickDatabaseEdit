@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 
@@ -25,7 +26,6 @@ namespace DatabaseEdit.Pages
 
         public TableResult TableConfig { get; set; }
         public IEnumerable<string> Tables { get; set; }
-
         public string Message { get; set; }
 
         public DatabaseEditModel(DatabaseConfig config)
@@ -33,10 +33,14 @@ namespace DatabaseEdit.Pages
             this.Config = config;
         }
 
+        public override void OnPageHandlerExecuting(PageHandlerExecutingContext context)
+        {
+            Init();
+        }
+
 
         public void OnGet()
         {
-            Init();
         }
 
         public JsonResult OnGetGuid()
@@ -46,8 +50,6 @@ namespace DatabaseEdit.Pages
 
         public void OnPost()
         {
-            Init();
-
             var row = Row == -1 ? TableConfig.Data.NewRow() : TableConfig.Data.Rows[Row];
             var updated = new Dictionary<string, string>();
             foreach (var config in TableConfig.Config)

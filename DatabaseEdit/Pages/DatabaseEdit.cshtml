@@ -29,7 +29,7 @@
                             {
                                 var e = Model.TableConfig.Config.ElementAt(r);
                                 <tr>
-                                    <td>@e[3]</td>
+                                    <td><span title="@(e[6]) (@e[7])">@e[3]</span></td>
                                     @if (e[9].ToString() == "PRIMARY KEY" && Model.Row >= 0)
                                     {
                                         <td>

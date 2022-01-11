@@ -78,16 +78,22 @@ where a.TABLE_CATALOG = DB_NAME()";
 
         public void LoadData(string sortColumn, bool sortAscending)
         {
-            _sortColumn = sortColumn;
-            _sortAscending = sortAscending; 
 
             using (var connection = new SqlConnection(ConnectionString))
             {
-                var query = "SELECT * FROM " + Table;
-                if (!Config.Any(r => r[3].ToString() == sortColumn)) sortColumn = null;
+                var query = "SELECT * FROM " + Table + " p ";
+                var columnRow = Config.FirstOrDefault(r => r[3].ToString() == sortColumn);
+                if (columnRow == null) sortColumn = null;
+
                 if (!string.IsNullOrEmpty(sortColumn))
                 {
-                    query += " order by " + sortColumn + " " + (sortAscending ? "ASC":"DESC");
+                    var sort = $"p.{sortColumn}";
+                    if (columnRow[9].ToString() == "FOREIGN KEY")
+                    {
+                        sort = $"(SELECT {columnRow[13]} FROM {columnRow[10]}.{columnRow[11]} f WHERE f.{columnRow[12]} = p.{sortColumn})";
+                    }
+
+                    query += " order by " + sort + " " + (sortAscending ? "ASC" : "DESC");
                 }
                 using (var command = new SqlCommand(query, connection))
                 {
@@ -100,6 +106,8 @@ where a.TABLE_CATALOG = DB_NAME()";
                     connection.Close();
                 }
             }
+            _sortColumn = sortColumn;
+            _sortAscending = sortAscending;
         }
 
         public void LoadConfiguration()

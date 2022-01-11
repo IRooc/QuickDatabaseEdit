@@ -25,7 +25,8 @@ table {
         top: 0px;
         z-index: 2;
         background-color: white;
-}
+    }
+
     table.edit {
         width: 100%;
         max-width: 800px;

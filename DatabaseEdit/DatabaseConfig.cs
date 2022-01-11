@@ -47,7 +47,7 @@ where a.TABLE_CATALOG = DB_NAME()";
             return ConfigTable.Rows.Cast<DataRow>().Select(r => r[0].ToString() + "." + r[1].ToString()).Distinct().OrderBy(s => s);
         }
 
-        public TableResult GetTable(string table)
+        public TableResult GetTable(string table, string sortColumn, bool ascending)
         {
             var result = new TableResult();
             //check if param is valid
@@ -56,8 +56,8 @@ where a.TABLE_CATALOG = DB_NAME()";
             {
                 result.ConnectionString = configuration.GetConnectionString("Database");
                 result.Table = table;
-                result.LoadData();
                 result.LoadConfiguration();
+                result.LoadData(sortColumn, ascending);
                 return result;
             }
             return null;
@@ -73,11 +73,22 @@ where a.TABLE_CATALOG = DB_NAME()";
         public string ConnectionString { get; set; }
         public string Table { get; set; }
 
-        public void LoadData()
+        private string _sortColumn = null;
+        private bool _sortAscending = true;
+
+        public void LoadData(string sortColumn, bool sortAscending)
         {
+            _sortColumn = sortColumn;
+            _sortAscending = sortAscending; 
+
             using (var connection = new SqlConnection(ConnectionString))
             {
                 var query = "SELECT * FROM " + Table;
+                if (!Config.Any(r => r[3].ToString() == sortColumn)) sortColumn = null;
+                if (!string.IsNullOrEmpty(sortColumn))
+                {
+                    query += " order by " + sortColumn + " " + (sortAscending ? "ASC":"DESC");
+                }
                 using (var command = new SqlCommand(query, connection))
                 {
                     connection.Open();
@@ -155,7 +166,7 @@ where a.TABLE_CATALOG = DB_NAME()";
                     var result = command.ExecuteNonQuery();
                     connection.Close();
 
-                    LoadData();
+                    LoadData(_sortColumn, _sortAscending);
                     return result > 0;
                 }
             }
@@ -201,7 +212,7 @@ where a.TABLE_CATALOG = DB_NAME()";
                     var result = command.ExecuteNonQuery();
                     connection.Close();
 
-                    LoadData();
+                    LoadData(_sortColumn, _sortAscending);
                     return result > 0;
                 }
             }

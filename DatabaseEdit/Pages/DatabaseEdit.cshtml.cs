@@ -19,6 +19,12 @@ namespace DatabaseEdit.Pages
 
         [BindProperty(SupportsGet = true)]
         public string Table { get; set; }
+        
+        [BindProperty(SupportsGet = true)]
+        public string SortColumn { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string SortDirection { get; set; }
 
         [BindProperty(SupportsGet = true)]
         public int Row { get; set; }
@@ -81,7 +87,7 @@ namespace DatabaseEdit.Pages
 
             if (!string.IsNullOrEmpty(Table))
             {
-                TableConfig = Config.GetTable(Table);
+                TableConfig = Config.GetTable(Table, SortColumn, SortDirection?.Equals("asc", StringComparison.InvariantCultureIgnoreCase) ?? true);
                 if (TableConfig == null)
                 {
                     View = "tables";

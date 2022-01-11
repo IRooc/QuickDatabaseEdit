@@ -19,7 +19,13 @@ h2 a {
 table {
     border-collapse: collapse;
 }
-
+    table th {
+        position: sticky;
+        position: -webkit-sticky;
+        top: 0px;
+        z-index: 2;
+        background-color: white;
+}
     table.edit {
         width: 100%;
         max-width: 800px;

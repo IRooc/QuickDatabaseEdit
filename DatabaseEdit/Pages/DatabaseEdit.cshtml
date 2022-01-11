@@ -129,7 +129,7 @@
                             <tr>
                                 @foreach (DataColumn col in Model.TableConfig.Data.Columns)
                                 {
-                                    <th class="sort" data-type="@col.DataType.Name.ToLower()">@col.ColumnName</th>
+                                    <th class="sort">@col.ColumnName</th>
                                 }
                             </tr>
                         </thead>

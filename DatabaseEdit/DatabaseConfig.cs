@@ -225,5 +225,37 @@ where a.TABLE_CATALOG = DB_NAME()";
                 }
             }
         }
+
+        internal bool DeleteRow(int row)
+        {
+            var current = Data.Rows[row];
+
+            var where = string.Empty;
+            foreach (var key in PrimaryKeys)
+            {
+                if (!string.IsNullOrEmpty(where))
+                {
+                    where += " AND ";
+                }
+                where += $" {key} = @key{key} ";
+            }
+            var query = $"DELETE FROM {Table} WHERE {where}";
+            using (var connection = new SqlConnection(ConnectionString))
+            {
+                using (var command = new SqlCommand(query, connection))
+                {
+                    foreach (var key in PrimaryKeys)
+                    {
+                        command.Parameters.AddWithValue("key" + key, current[key]);
+                    }
+                    connection.Open();
+                    var result = command.ExecuteNonQuery();
+                    connection.Close();
+
+                    LoadData(_sortColumn, _sortAscending);
+                    return result > 0;
+                }
+            }
+        }
     }
 }

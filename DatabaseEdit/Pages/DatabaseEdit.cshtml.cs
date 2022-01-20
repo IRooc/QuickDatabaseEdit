@@ -19,7 +19,7 @@ namespace DatabaseEdit.Pages
 
         [BindProperty(SupportsGet = true)]
         public string Table { get; set; }
-        
+
         [BindProperty(SupportsGet = true)]
         public string SortColumn { get; set; }
 
@@ -47,6 +47,7 @@ namespace DatabaseEdit.Pages
 
         public void OnGet()
         {
+            this.Message = (string)TempData["Message"];
         }
 
         public JsonResult OnGetGuid()
@@ -54,7 +55,7 @@ namespace DatabaseEdit.Pages
             return new JsonResult(Guid.NewGuid());
         }
 
-        public void OnPost()
+        public IActionResult OnPost()
         {
             var row = Row == -1 ? TableConfig.Data.NewRow() : TableConfig.Data.Rows[Row];
             var updated = new Dictionary<string, string>();
@@ -63,7 +64,7 @@ namespace DatabaseEdit.Pages
                 var key = config[3].ToString();
                 var oldValue = row[key];
                 var newValue = Request.Form[key].ToString();
-                if (oldValue.ToString()?.Replace("\r\n","\n") != newValue?.Replace("\r\n", "\n"))
+                if (oldValue.ToString()?.Replace("\r\n", "\n") != newValue?.Replace("\r\n", "\n"))
                 {
                     updated.Add(key, newValue);
                 }
@@ -79,6 +80,23 @@ namespace DatabaseEdit.Pages
                 if (!success) this.Message += "UPDATE FAILED!!!!!!!!!!!!!!!!!!"; //https://wiki.lspace.org/mediawiki/index.php/Multiple_exclamation_marks
                 this.Message += string.Join("<br/>", updated.Select(k => { return k.Key + ": " + k.Value; }).ToArray());
             }
+            TempData["Message"] = this.Message;
+            return RedirectToPage(new { view = "table", table = Table });
+        }
+        public IActionResult OnPostDelete()
+        {
+            this.View = "table";
+            if (TableConfig.DeleteRow(Row))
+            {
+                this.Message = "Deleted Row " + this.Row;
+            }
+            else
+            {
+                this.Message = "Failed to deleted row " + this.Row;
+
+            }
+            TempData["Message"] = this.Message;
+            return RedirectToPage(new { view = "table", table = Table });
         }
 
         private void Init()

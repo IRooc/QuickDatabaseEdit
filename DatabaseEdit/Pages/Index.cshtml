@@ -3,5 +3,8 @@
 @{
     ViewData["Title"] = "Home page";
 }
-
-<a href="/DatabaseEdit">goto edit</a>
+<form asp-page-handler="GotoEdit" method="post">
+   <label>Enter connectionstring
+   <input type="text" name="connectionstring" width="80%" value="@Model.Config.ConnectionString" required/></label>
+   <button>Goto Edit</button>
+</form>

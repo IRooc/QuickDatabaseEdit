@@ -8,18 +8,23 @@ using System.Threading.Tasks;
 
 namespace DatabaseEdit.Pages
 {
-    public class IndexModel : PageModel
-    {
-        private readonly ILogger<IndexModel> _logger;
+   public class IndexModel : PageModel
+   {
+      public IndexModel(DatabaseConfig config)
+      {
+         this.Config = config;
+      }
 
-        public IndexModel(ILogger<IndexModel> logger)
-        {
-            _logger = logger;
-        }
+      public DatabaseConfig Config { get; }
 
-        public void OnGet()
-        {
+      public void OnGet()
+      {
 
-        }
-    }
+      }
+      public IActionResult OnPostGotoEdit()
+      {
+         Config.SetConnectionString(Request.Form["connectionstring"]);
+         return RedirectToPage("DatabaseEdit");
+      }
+   }
 }

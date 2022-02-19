@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -113,6 +114,11 @@ namespace DatabaseEdit.Pages
             return date.ToString("yyyy-MM-dd'T'HH:mm:ssZ");
         }
 
+        public string GetQuery(string view)
+        {
+            var query = Request.QueryString.ToString();
+            return Regex.Replace(query, "view=[^&]+", "view=" + view);
+        }
 
         private void Init()
         {

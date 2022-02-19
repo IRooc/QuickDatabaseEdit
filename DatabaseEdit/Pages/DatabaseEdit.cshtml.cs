@@ -61,8 +61,13 @@ namespace DatabaseEdit.Pages
             var updated = new Dictionary<string, string>();
             foreach (var config in TableConfig.Config)
             {
+                var type = config[6].ToString();
                 var key = config[3].ToString();
                 var oldValue = row[key];
+                if (type == "datetime" ||  type == "datetime2")
+                {
+                    oldValue = GetDateTimeString(oldValue);
+                }
                 var newValue = Request.Form[key].ToString();
                 if (oldValue.ToString()?.Replace("\r\n", "\n") != newValue?.Replace("\r\n", "\n"))
                 {
@@ -98,6 +103,16 @@ namespace DatabaseEdit.Pages
             TempData["Message"] = this.Message;
             return RedirectToPage(new { view = "table", table = Table });
         }
+
+
+        public string GetDateTimeString(object value)
+        {
+            if (value == null) return string.Empty;
+            if (value == DBNull.Value) return string.Empty;
+            var date = (DateTime)value;
+            return date.ToString("yyyy-MM-dd'T'HH:mm:ssZ");
+        }
+
 
         private void Init()
         {

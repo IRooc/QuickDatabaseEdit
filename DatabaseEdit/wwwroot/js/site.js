@@ -62,3 +62,20 @@ async function newguid(event) {
 function removeQsValues(url) {
     return url.replace(/&sortcolumn=[^&]+/gi, '').replace(/&sortdirection=[^&]+/gi, '');
 }
+
+function copyCurrentForm() {
+    const elements = Array.from(document.querySelectorAll('input,select,textarea'));
+    const shownElements = elements.filter(el => el.type !== 'hidden');
+    const mapped = shownElements.map(function(el, ix) { return{ key: el.name, val: el.value } });
+    localStorage.setItem('form', JSON.stringify(mapped));
+    console.log(elements, shownElements, mapped, localStorage.getItem('form'));
+}
+
+function pasteCurrentForm() {
+    const stored = localStorage.getItem('form');
+    const elements = JSON.parse(stored);
+    for (let i = 0; i < elements.length; i++) {
+        var el = elements[i]
+        document.querySelector('[name="' + el.key + '"]').value = el.val;
+    }
+}

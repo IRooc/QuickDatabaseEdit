@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -65,7 +67,7 @@ namespace DatabaseEdit.Pages
                 var type = config[6].ToString();
                 var key = config[3].ToString();
                 var oldValue = row[key];
-                if (type == "datetime" ||  type == "datetime2")
+                if (type == "datetime" || type == "datetime2")
                 {
                     oldValue = GetDateTimeString(oldValue);
                 }
@@ -105,6 +107,52 @@ namespace DatabaseEdit.Pages
             return RedirectToPage(new { view = "table", table = Table });
         }
 
+        public async Task<ObjectResult> OnGetDownloadCSV()
+        {
+            Init();
+            var builder = new StringBuilder();
+            var started = false;
+            foreach (DataColumn col in TableConfig.Data.Columns)
+            {
+                if (started)
+                {
+                    builder.Append(',');
+                }
+                started = true;
+                builder.Append(col.ColumnName);
+            }
+            builder.Append('\n');
+
+            for (int r = 0; r < TableConfig.Data.Rows.Count; r++)
+            {
+                var row = TableConfig.Data.Rows[r];
+                for (int i = 0; i < row.ItemArray.Length; i++)
+                {
+                    if (i > 0)
+                    {
+                        builder.Append(',');
+                    }
+                    var item = row.ItemArray[i];
+                    if (item is string ss && ss.Contains("\n"))
+                    {
+                        ss = ss.Replace("\n", "\t"); //todo what todo?
+                        if (ss.Contains(","))
+                        {
+                            if (ss.Contains("\""))
+                            {
+                                ss = ss.Replace('"', '\'');
+                            }
+                            ss = $"\"{ss}\"";
+                        }
+                        item = ss;
+                    }
+                    builder.Append(item);
+                }
+                builder.Append('\n');
+            }
+
+            return new ObjectResult(builder.ToString());
+        }
 
         public string GetDateTimeString(object value)
         {

@@ -182,7 +182,7 @@
                     <ul>
                         @foreach (var table in Model.Config.GetTables())
                         {
-                            <li><a href="?view=table&table=@table">@table</a>   | <a href="?view=config&table=@table">config</a></li>
+                            <li><a href="?view=table&table=@table">@table</a>   | <a href="?view=config&table=@table">config</a>  | <a asp-page-handler="DownloadCSV" asp-route-table="@table" target="_blank">download CSV</a></li>
                         }
                     </ul>
                 </div>

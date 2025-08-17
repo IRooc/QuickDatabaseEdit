@@ -86,6 +86,8 @@ where a.TABLE_CATALOG = DB_NAME()";
          using (var connection = new SqlConnection(ConnectionString))
          {
             var query = "SELECT * FROM " + Table + " p ";
+
+            //check if sortColumn exists
             var columnRow = Config.FirstOrDefault(r => r[3].ToString() == sortColumn);
             if (columnRow == null) sortColumn = null;
 
@@ -99,6 +101,7 @@ where a.TABLE_CATALOG = DB_NAME()";
 
                query += " order by " + sort + " " + (sortAscending ? "ASC" : "DESC");
             }
+
             using (var command = new SqlCommand(query, connection))
             {
                connection.Open();

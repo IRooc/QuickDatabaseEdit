@@ -170,7 +170,7 @@ namespace DatabaseEdit.Pages
 
         private void Init()
         {
-            ViewData["Title"] = Table ?? "Tables";
+            ViewData["Title"] = $"{Table ?? "Tables"} - {Config.ServerName}";
 
             if (!string.IsNullOrEmpty(Table))
             {

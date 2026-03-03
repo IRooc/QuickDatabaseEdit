@@ -40,6 +40,13 @@ table {
             padding: 0.5rem;
         }
 
+        table tr td p.cell-content {
+            max-height: 6.75rem;
+            max-width: 8rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
     table select,
     table input,
     table textarea {
@@ -82,4 +89,12 @@ label input[type=radio] {
     display: inline-block;
     width: auto;
     margin-right: 10px;
+}
+
+
+#storedItemsDiv {
+    display:flex;
+    gap: 1rem;
+    margin-top:1rem;
+    flex-wrap: wrap;
 }

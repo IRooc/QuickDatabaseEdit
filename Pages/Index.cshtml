@@ -6,5 +6,6 @@
 <form asp-page-handler="GotoEdit" method="post">
    <label>Enter connectionstring
    <input type="text" name="connectionstring" width="80%" value="@Model.Config.ConnectionString" required/></label>
-   <button>Goto Edit</button>
+   <button id="gotoEdit">Goto Edit</button>
 </form>
+<div id="storedItemsDiv"></div>

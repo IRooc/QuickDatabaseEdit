@@ -79,3 +79,51 @@ function pasteCurrentForm() {
         document.querySelector('[name="' + el.key + '"]').value = el.val;
     }
 }
+
+
+
+//remember previous items
+const gotoEditButton = document.getElementById('gotoEdit');
+const storedItemsDiv = document.getElementById('storedItemsDiv');
+let storedItems = [];
+
+
+const selectItem = (e) => {
+    const connectionstring = e.target.dataset.storedvalue;
+    if (e.ctrlKey) {
+        const ix = storedItems.indexOf(connectionstring);
+        if (ix >= 0) {
+            storedItems.splice(ix, 1);
+            localStorage.setItem('storedItems', JSON.stringify(storedItems));
+        }
+        e.target.remove();
+    } else {
+        document.querySelector('input[name="connectionstring"]').value = connectionstring;
+        gotoEditButton.click();
+    }
+}
+
+if (storedItemsDiv) {
+    storedItems = JSON.parse(localStorage.getItem('storedItems') ?? "[]");
+    storedItems.sort();
+    for (let i = 0; i < storedItems.length; i++) {
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.title = 'Ctrl click to remove';
+        el.onclick = selectItem;
+        el.dataset.storedvalue = storedItems[i];
+        el.innerHTML = storedItems[i].replace(/;/g,'<br/>');;
+        storedItemsDiv.appendChild(el);
+    }
+}
+if (gotoEditButton) {
+    gotoEditButton.addEventListener('click', () => {
+        const newUrl = document.querySelector('input[name="connectionstring"]').value;
+        console.log('AAA', newUrl, storedItems);
+        if (storedItems.indexOf(newUrl) === -1) {
+            console.log('BBB', newUrl, storedItems);
+            storedItems.push(newUrl);
+            localStorage.setItem('storedItems', JSON.stringify(storedItems));
+        }
+    })
+}

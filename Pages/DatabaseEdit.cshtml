@@ -154,10 +154,16 @@
                                         var config = Model.TableConfig.Config.ElementAt(i);
                                         if (Model.TableConfig.ForeignKeys.ContainsKey(i) && !string.IsNullOrEmpty(item.ToString()))
                                         {
-                                            var table = Model.TableConfig.ForeignKeys[i];
-                                            <td>
-                                                @(table.Rows.Cast<DataRow>().First(r => r["key"].ToString() == item.ToString())["value"])
-                                            </td>
+                                            var table = Model.TableConfig.ForeignKeys.FirstOrDefault(kv => kv.Key == i).Value;
+                                            if (table != null && (table.Rows.Cast<DataRow>().FirstOrDefault(r => r["key"].ToString() == item.ToString()) != null)) {
+                                                <td>
+                                                    @(table.Rows.Cast<DataRow>().First(r => r["key"].ToString() == item.ToString())["value"])
+                                                </td>
+                                            }
+                                            else
+                                            {
+                                                <td><p title="@item" class="cell-content"><em>[@item]</em></p></td>
+                                            }
                                         }
                                         else if (config.ItemArray[6].ToString() == "datetime" && item != DBNull.Value)
                                         {
@@ -165,7 +171,7 @@
                                         }
                                         else
                                         {
-                                            <td>@item</td>
+                                            <td><p title="@item" class="cell-content">@item</p></td>
                                         }
                                     }
                                 </tr>

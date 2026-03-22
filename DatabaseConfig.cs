@@ -173,7 +173,7 @@ where a.TABLE_CATALOG = DB_NAME()";
 
         private bool Add(Dictionary<string, string> updated)
         {
-            var columns = string.Join(',', updated.Select(k => k.Key).ToArray());
+            var columns = string.Join(',', updated.Select(k => $"[{k.Key}]").ToArray());
             var values = string.Join(',', updated.Select(k => "@value" + k.Key).ToArray());
 
             var query = $"INSERT INTO {Table} ({columns}) VALUES({values})";
@@ -206,7 +206,7 @@ where a.TABLE_CATALOG = DB_NAME()";
                 {
                     where += " AND ";
                 }
-                where += $" {key} = @key{key} ";
+                where += $" [{key}] = @key{key} ";
             }
             var set = string.Empty;
             foreach (var update in updated)
@@ -215,7 +215,7 @@ where a.TABLE_CATALOG = DB_NAME()";
                 {
                     set += " , ";
                 }
-                set += $" {update.Key} = @update{update.Key} ";
+                set += $" [{update.Key}] = @update{update.Key} ";
             }
 
             var query = $"UPDATE {Table} SET {set} WHERE {where}";

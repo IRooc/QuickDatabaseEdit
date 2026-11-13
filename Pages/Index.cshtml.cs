@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.Data.Common;
 
 namespace DatabaseEdit.Pages
 {
@@ -17,13 +15,35 @@ namespace DatabaseEdit.Pages
 
       public DatabaseConfig Config { get; }
 
+      [BindProperty]
+      [Required(ErrorMessage = "Enter a connection string.")]
+      public string ConnectionString { get; set; }
+
+      [BindProperty]
+      public DatabaseType DatabaseType { get; set; } = DatabaseType.MSSQL;
+
       public void OnGet()
       {
-
+         ConnectionString = Config.ConnectionString;
+         DatabaseType = Config.DatabaseType;
       }
       public IActionResult OnPostGotoEdit()
       {
-         Config.SetConnectionString(Request.Form["connectionstring"]);
+         if (!Enum.IsDefined(DatabaseType))
+         {
+            ModelState.AddModelError(nameof(DatabaseType), "Select MSSQL or Postgres.");
+         }
+         if (!ModelState.IsValid) return Page();
+
+         try
+         {
+            Config.SetConnectionString(ConnectionString, DatabaseType);
+         }
+         catch (Exception exception) when (exception is DbException || exception is ArgumentException)
+         {
+            ModelState.AddModelError(string.Empty, "Unable to connect: " + exception.Message);
+            return Page();
+         }
          return RedirectToPage("DatabaseEdit");
       }
    }

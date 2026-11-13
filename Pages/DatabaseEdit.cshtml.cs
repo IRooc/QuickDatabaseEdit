@@ -1,15 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Configuration;
 
 namespace DatabaseEdit.Pages
 {
@@ -45,6 +43,7 @@ namespace DatabaseEdit.Pages
         public override void OnPageHandlerExecuting(PageHandlerExecutingContext context)
         {
             Init();
+            if (Config.ConfigTable == null) context.Result = RedirectToPage("Index");
         }
 
 
@@ -64,20 +63,19 @@ namespace DatabaseEdit.Pages
             var updated = new Dictionary<string, string>();
             foreach (var config in TableConfig.Config)
             {
-                var type = config[6].ToString();
                 var key = config[3].ToString();
-                var oldValue = row[key];
-                if (type == "datetime" || type == "datetime2")
-                {
-                    oldValue = GetDateTimeString(oldValue);
-                }
+                if (TableConfig.IsGenerated(config) || (Row >= 0 && TableConfig.PrimaryKeys.Contains(key))) continue;
+                var oldValue = GetEditValue(config, row[key]);
                 var newValue = Request.Form[key].ToString();
-                if (oldValue.ToString()?.Replace("\r\n", "\n") != newValue?.Replace("\r\n", "\n"))
+                // Leave blank defaulted fields out of INSERT so the database supplies them.
+                if (Row == -1 && string.IsNullOrEmpty(newValue) && !config.IsNull(4)) continue;
+                if (oldValue.Replace("\r\n", "\n") != newValue.Replace("\r\n", "\n")
+                    || Row == -1 && config[5].ToString() == "NO")
                 {
                     updated.Add(key, newValue);
                 }
             }
-            if (updated.Count == 0)
+            if (updated.Count == 0 && Row != -1)
             {
                 this.Message = "Nothing changed";
             }
@@ -86,7 +84,7 @@ namespace DatabaseEdit.Pages
                 this.Message = "Saved<br/>";
                 bool success = TableConfig.UpdateRow(Row, updated);
                 if (!success) this.Message += "UPDATE FAILED!!!!!!!!!!!!!!!!!!"; //https://wiki.lspace.org/mediawiki/index.php/Multiple_exclamation_marks
-                this.Message += string.Join("<br/>", updated.Select(k => { return k.Key + ": " + k.Value; }).ToArray());
+                this.Message += string.Join("<br/>", updated.Select(k => System.Net.WebUtility.HtmlEncode(k.Key + ": " + k.Value)).ToArray());
             }
             TempData["Message"] = this.Message;
             return RedirectToPage(new { view = "table", table = Table });
@@ -107,51 +105,22 @@ namespace DatabaseEdit.Pages
             return RedirectToPage(new { view = "table", table = Table });
         }
 
-        public async Task<ObjectResult> OnGetDownloadCSV()
+        public ObjectResult OnGetDownloadCSV()
         {
             Init();
             var builder = new StringBuilder();
-            var started = false;
-            foreach (DataColumn col in TableConfig.Data.Columns)
+            builder.AppendLine(string.Join(',', TableConfig.Data.Columns.Cast<DataColumn>().Select(c => EscapeCsv(c.ColumnName))));
+            foreach (DataRow row in TableConfig.Data.Rows)
             {
-                if (started)
-                {
-                    builder.Append(',');
-                }
-                started = true;
-                builder.Append(col.ColumnName);
+                builder.AppendLine(string.Join(',', row.ItemArray.Select(value => EscapeCsv(value.ToString()))));
             }
-            builder.Append('\n');
-
-            for (int r = 0; r < TableConfig.Data.Rows.Count; r++)
-            {
-                var row = TableConfig.Data.Rows[r];
-                for (int i = 0; i < row.ItemArray.Length; i++)
-                {
-                    if (i > 0)
-                    {
-                        builder.Append(',');
-                    }
-                    var item = row.ItemArray[i];
-                    if (item is string ss && ss.Contains("\n"))
-                    {
-                        ss = ss.Replace("\n", "\t"); //todo what todo?
-                        if (ss.Contains(","))
-                        {
-                            if (ss.Contains("\""))
-                            {
-                                ss = ss.Replace('"', '\'');
-                            }
-                            ss = $"\"{ss}\"";
-                        }
-                        item = ss;
-                    }
-                    builder.Append(item);
-                }
-                builder.Append('\n');
-            }
-
             return new ObjectResult(builder.ToString());
+        }
+
+        private static string EscapeCsv(string value)
+        {
+            return value.IndexOfAny(new[] { ',', '"', '\r', '\n' }) >= 0
+                ? "\"" + value.Replace("\"", "\"\"") + "\"" : value;
         }
 
         public string GetDateTimeString(object value)
@@ -159,7 +128,29 @@ namespace DatabaseEdit.Pages
             if (value == null) return string.Empty;
             if (value == DBNull.Value) return string.Empty;
             var date = (DateTime)value;
-            return date.ToString("yyyy-MM-dd'T'HH:mm:ssZ");
+            return date.ToString("yyyy-MM-dd'T'HH:mm:ss.FFFFFFF", CultureInfo.InvariantCulture);
+        }
+
+        public bool IsDateTimeType(string type)
+        {
+            return type == "datetime" || type == "datetime2" || type == "date"
+                || Config.DatabaseType == DatabaseType.Postgres && type.StartsWith("timestamp");
+        }
+
+        public string GetEditValue(DataRow column, object value)
+        {
+            if (value == null || value == DBNull.Value) return string.Empty;
+            var type = column[6].ToString();
+            if (Config.DatabaseType == DatabaseType.Postgres)
+            {
+                if (type == "boolean") return value.ToString() == "t" ? "True" : "False";
+                if (IsDateTimeType(type)) return value.ToString().Replace(' ', 'T');
+            }
+            else if (IsDateTimeType(type))
+            {
+                return type == "date" ? ((DateTime)value).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : GetDateTimeString(value);
+            }
+            return value.ToString();
         }
 
         public string GetQuery(string view)

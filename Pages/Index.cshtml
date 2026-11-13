@@ -4,8 +4,15 @@
     ViewData["Title"] = "Home page";
 }
 <form asp-page-handler="GotoEdit" method="post">
+   <div asp-validation-summary="All"></div>
+   <label for="databaseType">Database type</label>
+   <select asp-for="DatabaseType" id="databaseType">
+      <option value="MSSQL">MSSQL</option>
+      <option value="Postgres">Postgres</option>
+   </select>
    <label>Enter connectionstring
-   <input type="text" name="connectionstring" width="80%" value="@Model.Config.ConnectionString" required/></label>
+   <input asp-for="ConnectionString" id="connectionstring" type="text" required/></label>
    <button id="gotoEdit">Goto Edit</button>
+   <p id="connectionstringHint"></p>
 </form>
 <div id="storedItemsDiv"></div>

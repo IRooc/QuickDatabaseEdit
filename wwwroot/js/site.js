@@ -44,7 +44,7 @@ for (let i = 0; i < sorters.length; i++) {
         var dir = 'asc'
         if (document.location.href.indexOf('sortdirection=asc') > 0) dir = 'desc';
         setTimeout(() => {
-            document.location.href = removeQsValues(document.location.href) + '&sortcolumn=' + colName + '&sortdirection=' + dir;
+            document.location.href = removeQsValues(document.location.href) + '&sortcolumn=' + encodeURIComponent(colName) + '&sortdirection=' + dir;
         }, 100)
     })
 }
@@ -85,45 +85,65 @@ function pasteCurrentForm() {
 //remember previous items
 const gotoEditButton = document.getElementById('gotoEdit');
 const storedItemsDiv = document.getElementById('storedItemsDiv');
+const databaseTypeSelect = document.getElementById('databaseType');
+const connectionstringInput = document.getElementById('connectionstring');
 let storedItems = [];
 
 
 const selectItem = (e) => {
-    const connectionstring = e.target.dataset.storedvalue;
+    const connectionstring = e.currentTarget.dataset.storedvalue;
+    const databaseType = e.currentTarget.dataset.databaseType;
     if (e.ctrlKey) {
-        const ix = storedItems.indexOf(connectionstring);
+        const ix = storedItems.findIndex(item => item.connectionstring === connectionstring && item.databaseType === databaseType);
         if (ix >= 0) {
             storedItems.splice(ix, 1);
             localStorage.setItem('storedItems', JSON.stringify(storedItems));
         }
-        e.target.remove();
+        e.currentTarget.remove();
     } else {
-        document.querySelector('input[name="connectionstring"]').value = connectionstring;
+        connectionstringInput.value = connectionstring;
+        databaseTypeSelect.value = databaseType;
+        updateConnectionstringHint();
         gotoEditButton.click();
     }
 }
 
 if (storedItemsDiv) {
-    storedItems = JSON.parse(localStorage.getItem('storedItems') ?? "[]");
-    storedItems.sort();
+    // Old saved connections were plain strings and always used MSSQL.
+    storedItems = JSON.parse(localStorage.getItem('storedItems') ?? "[]")
+        .map(item => typeof item === 'string' ? { databaseType: 'MSSQL', connectionstring: item } : item);
+    storedItems.sort((a, b) => (a.databaseType + a.connectionstring).localeCompare(b.databaseType + b.connectionstring));
     for (let i = 0; i < storedItems.length; i++) {
         const el = document.createElement('button');
         el.type = 'button';
         el.title = 'Ctrl click to remove';
         el.onclick = selectItem;
-        el.dataset.storedvalue = storedItems[i];
-        el.innerHTML = storedItems[i].replace(/;/g,'<br/>');;
+        el.dataset.storedvalue = storedItems[i].connectionstring;
+        el.dataset.databaseType = storedItems[i].databaseType;
+        el.textContent = storedItems[i].databaseType + '\n' + storedItems[i].connectionstring.replace(/;/g, '\n');
         storedItemsDiv.appendChild(el);
     }
 }
 if (gotoEditButton) {
-    gotoEditButton.addEventListener('click', () => {
-        const newUrl = document.querySelector('input[name="connectionstring"]').value;
-        console.log('AAA', newUrl, storedItems);
-        if (storedItems.indexOf(newUrl) === -1) {
-            console.log('BBB', newUrl, storedItems);
-            storedItems.push(newUrl);
+    gotoEditButton.form.addEventListener('submit', () => {
+        const connectionstring = connectionstringInput.value;
+        const databaseType = databaseTypeSelect.value;
+        if (!storedItems.some(item => item.connectionstring === connectionstring && item.databaseType === databaseType)) {
+            storedItems.push({ databaseType, connectionstring });
             localStorage.setItem('storedItems', JSON.stringify(storedItems));
         }
     })
+}
+
+function updateConnectionstringHint() {
+    const example = databaseTypeSelect.value === 'Postgres'
+        ? 'Host=localhost;Port=5432;Database=mydatabase;Username=postgres;Password=yourpassword'
+        : 'Server=localhost;Database=mydatabase;Integrated Security=True;TrustServerCertificate=True';
+    connectionstringInput.placeholder = example;
+    document.getElementById('connectionstringHint').textContent = 'Example: ' + example;
+}
+
+if (databaseTypeSelect) {
+    databaseTypeSelect.addEventListener('change', updateConnectionstringHint);
+    updateConnectionstringHint();
 }

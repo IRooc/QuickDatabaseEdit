@@ -98,3 +98,7 @@ label input[type=radio] {
     margin-top:1rem;
     flex-wrap: wrap;
 }
+
+#storedItemsDiv button {
+    white-space: pre-line;
+}
